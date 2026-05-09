@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internship JD Analyzer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fdf4ef;
+      --accent: #f4c0a8;
+      --accent-dark: #e8956d;
+      --accent-darker: #b05830;
+      --surface: #fff;
+      --border: #f0d4c8;
+      --text: #2d1a0e;
+      --text-muted: #7a5a4a;
+      --red: #e55c5c;
+      --amber: #e8a030;
+      --blue: #4a90d9;
+      --green: #4caf7d;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(176,88,48,0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .header-left h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-darker);
+    }
+    .header-left p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .api-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .api-row label { font-size: 0.82rem; color: var(--text-muted); }
+    .api-row input {
+      padding: 6px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      width: 220px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    .api-row input:focus { border-color: var(--accent-dark); }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px 24px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 800px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-darker);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--accent-dark); }
+
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a5a4a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    select:focus { border-color: var(--accent-dark); }
+
+    .form-group { margin-bottom: 16px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent-darker);
+      color: #fff;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-primary:hover { background: #954a26; }
+    .btn-primary:disabled { background: var(--accent); cursor: not-allowed; }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--accent-darker);
+      border: 1.5px solid var(--border);
+      font-size: 0.82rem;
+      padding: 7px 14px;
+    }
+    .btn-secondary:hover { background: var(--accent); }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .results-panel {
+      overflow-y: auto;
+      max-height: calc(100vh - 130px);
+    }
+
+    .placeholder {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .placeholder .icon { font-size: 3rem; margin-bottom: 12px; }
+    .placeholder p { font-size: 0.9rem; }
+
+    /* Sections */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-darker);
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-coral { background: #fde8de; color: var(--accent-darker); }
+    .badge-red { background: #fde8e8; color: var(--red); }
+    .badge-amber { background: #fef3e2; color: var(--amber); }
+    .badge-blue { background: #e8f1fd; color: var(--blue); }
+    .badge-green { background: #e8f5ee; color: var(--green); }
+    .badge-gray { background: #f0ebe8; color: var(--text-muted); }
+
+    .glance-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Lists */
+    .req-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .req-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.87rem;
+      line-height: 1.4;
+    }
+    .req-list li .badge { flex-shrink: 0; margin-top: 1px; }
+
+    /* Progress bar */
+    .match-score-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .score-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent-darker);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .score-label { font-size: 0.8rem; color: var(--text-muted); }
+    .progress-track {
+      flex: 1;
+      height: 12px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-darker));
+      width: 0%;
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Skills table */
+    .skills-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .skills-table th {
+      text-align: left;
+      padding: 6px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1.5px solid var(--border);
+    }
+    .skills-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .skills-table tr:last-child td { border-bottom: none; }
+    .check { color: var(--green); font-size: 1rem; }
+    .cross { color: var(--red); font-size: 1rem; }
+
+    .flag-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .flag-list li {
+      font-size: 0.87rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      line-height: 1.4;
+    }
+    .flag-list li.green { background: #e8f5ee; color: #2a6648; }
+    .flag-list li.red { background: #fde8e8; color: #8b2020; }
+    .flag-list li.amber { background: #fef3e2; color: #7a4c10; }
+
+    .action-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .action-list li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 0.87rem;
+      line-height: 1.4;
+    }
+    .action-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--accent-darker);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .keyword-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
+    .keyword-cloud span {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: var(--accent-darker);
+    }
+
+    .verdict-box {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .verdict-emoji { font-size: 1.8rem; flex-shrink: 0; }
+    .verdict-text h4 { font-size: 0.95rem; font-weight: 700; color: var(--accent-darker); margin-bottom: 4px; }
+    .verdict-text p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* History */
+    .history-section { margin-top: 16px; }
+    .history-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .history-list { display: flex; flex-direction: column; gap: 6px; }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.82rem;
+    }
+    .history-item:hover { background: var(--accent); }
+    .history-item-left { display: flex; flex-direction: column; gap: 2px; }
+    .history-item-role { font-weight: 600; color: var(--text); }
+    .history-item-time { color: var(--text-muted); font-size: 0.75rem; }
+
+    /* Compare modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(45,26,14,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    }
+    .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--accent-darker); }
+    .modal-btn-row { display: flex; gap: 8px; margin-top: 16px; }
+    .hidden { display: none; }
+
+    /* Compare results */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 600px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-col { background: var(--bg); border-radius: 8px; padding: 12px; border: 1px solid var(--border); }
+    .compare-col h4 { font-size: 0.82rem; font-weight: 700; color: var(--accent-darker); margin-bottom: 8px; }
+
+    /* Spinner */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: #fde8e8;
+      border: 1px solid #f5baba;
+      color: #8b2020;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.87rem;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🔍 Internship JD Analyzer</h1>
+    <p>Agent #25 · Decode any job description and get your match score</p>
+  </div>
+  <div class="api-row">
+    <label for="apiKey">Gemini API Key</label>
+    <input type="password" id="apiKey" placeholder="AIza..." />
+  </div>
+</header>
+
+<main>
+  <!-- LEFT PANEL -->
+  <div class="panel">
+    <h2>📋 Your Inputs</h2>
+
+    <div class="form-group">
+      <label for="jdInput">Job Description</label>
+      <textarea id="jdInput" rows="9" placeholder="Paste the full JD here..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="bgInput">Your Skills & Background</label>
+      <textarea id="bgInput" rows="6" placeholder="List your skills, courses, projects, experience..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="yearSelect">Your Year</label>
+      <select id="yearSelect">
+        <option value="Freshman">Freshman</option>
+        <option value="Sophomore">Sophomore</option>
+        <option value="Junior" selected>Junior</option>
+        <option value="Senior">Senior</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()">
+      ✨ Analyze
+    </button>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="openCompareModal()">⚖️ Compare with another JD</button>
+      <button class="btn btn-secondary" id="downloadBtn" onclick="downloadAnalysis()" style="display:none">⬇️ Download</button>
+    </div>
+
+    <div class="history-section" id="historySection"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel results-panel" id="resultsPanel">
+    <div class="placeholder" id="placeholder">
+      <div class="icon">🧠</div>
+      <p>Paste a JD and your background,<br>then click <strong>Analyze</strong> to decode it.</p>
+    </div>
+    <div id="resultsContent" class="hidden"></div>
+  </div>
+</main>
+
+<!-- Compare Modal -->
+<div class="modal-overlay hidden" id="compareModal">
+  <div class="modal">
+    <h3>⚖️ Compare with Another JD</h3>
+    <div class="form-group">
+      <label>Second Job Description</label>
+      <textarea id="jd2Input" rows="8" placeholder="Paste the second JD here..."></textarea>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn btn-primary" style="flex:1" onclick="runCompare()">Compare Both</button>
+      <button class="btn btn-secondary" onclick="closeCompareModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  let lastAnalysis = null;
+  let compareAnalysis = null;
+
+  // Persist API key
+  const apiKeyEl = document.getElementById('apiKey');
+  apiKeyEl.value = localStorage.getItem('gemini_api_key') || '';
+  apiKeyEl.addEventListener('change', () => localStorage.setItem('gemini_api_key', apiKeyEl.value));
+
+  // ─── Gemini Call ───────────────────────────────────────────
+  async function callGemini(prompt) {
+    const key = apiKeyEl.value.trim();
+    if (!key) throw new Error('Please enter your Gemini API key above.');
+    const res = await fetch(`${API_URL}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `API error ${res.status}`);
+    }
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  function buildPrompt(jd, background, year) {
+    return `Analyze this internship job description for a ${year} CS student.
+
+Job Description:
+${jd}
+
+Student background:
+${background}
+
+Return this exact JSON:
+{
+  "atAGlance": {
+    "roleType": "SWE Intern",
+    "companyVibe": "Big Tech",
+    "difficulty": "Competitive",
+    "gpaExpectation": "3.5+ implied"
+  },
+  "requirements": {
+    "mustHaves": ["Requirement 1", "Requirement 2"],
+    "niceToHaves": ["Pref 1", "Pref 2"],
+    "hiddenExpectations": ["Implied expectation 1", "Implied expectation 2"]
+  },
+  "matchScore": {
+    "overall": 72,
+    "skills": [
+      { "skill": "Python", "have": true, "strength": "Strong" },
+      { "skill": "Kubernetes", "have": false, "strength": "None" }
+    ],
+    "greenFlags": ["Strength 1", "Strength 2"],
+    "gaps": ["Gap 1", "Gap 2"]
+  },
+  "actionPlan": {
+    "beforeApplying": ["Action 1", "Action 2", "Action 3"],
+    "resumeKeywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    "interviewTopics": ["Topic 1", "Topic 2", "Topic 3"],
+    "shouldApply": { "verdict": "Yes", "reason": "2-sentence reasoning" }
+  },
+  "redFlags": ["Red flag 1 if any, else empty array"]
+}
+Return only JSON, no markdown.`;
+  }
+
+  // ─── Main Analysis ──────────────────────────────────────────
+  async function runAnalysis() {
+    const jd = document.getElementById('jdInput').value.trim();
+    const bg = document.getElementById('bgInput').value.trim();
+    const year = document.getElementById('yearSelect').value;
+
+    if (!jd) { alert('Please paste a job description.'); return; }
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Analyzing…';
+
+    document.getElementById('placeholder').classList.add('hidden');
+    document.getElementById('resultsContent').classList.add('hidden');
+
+    try {
+      const raw = await callGemini(buildPrompt(jd, bg, year));
+      const cleaned = raw.replace(/```json|```/g, '').trim();
+      const data = JSON.parse(cleaned);
+      lastAnalysis = { data, jd, bg, year, ts: Date.now() };
+      saveToHistory(lastAnalysis);
+      renderResults(data);
+      document.getElementById('downloadBtn').style.display = 'inline-flex';
+    } catch (e) {
+      document.getElementById('placeholder').classList.remove('hidden');
+      document.getElementById('placeholder').innerHTML =
+        `<div class="error-box">❌ ${e.message}</div><div class="icon">🧠</div><p>Fix the error above and try again.</p>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '✨ Analyze';
+    }
+  }
+
+  // ─── Render Results ─────────────────────────────────────────
+  function renderResults(d, container) {
+    const el = container || document.getElementById('resultsContent');
+    const difficultyColor = { Competitive: 'badge-red', Moderate: 'badge-amber', Accessible: 'badge-green' };
+    const verdictEmoji = { Yes: '✅', No: '❌', Maybe: '🤔' };
+
+    el.innerHTML = `
+      <!-- Section 1 -->
+      <div class="section">
+        <div class="section-title">At a Glance</div>
+        <div class="glance-row">
+          <span class="badge badge-coral">💼 ${esc(d.atAGlance.roleType)}</span>
+          <span class="badge badge-blue">🏢 ${esc(d.atAGlance.companyVibe)}</span>
+          <span class="badge ${difficultyColor[d.atAGlance.difficulty] || 'badge-gray'}">⚡ ${esc(d.atAGlance.difficulty)}</span>
+          <span class="badge badge-gray">🎓 GPA: ${esc(d.atAGlance.gpaExpectation)}</span>
+        </div>
+      </div>
+
+      <!-- Section 2 -->
+      <div class="section">
+        <div class="section-title">What They Actually Want</div>
+        <ul class="req-list">
+          ${d.requirements.mustHaves.map(r => `<li><span class="badge badge-red">Must</span>${esc(r)}</li>`).join('')}
+          ${d.requirements.niceToHaves.map(r => `<li><span class="badge badge-amber">Nice</span>${esc(r)}</li>`).join('')}
+          ${d.requirements.hiddenExpectations.map(r => `<li><span class="badge badge-blue">Hidden</span>${esc(r)}</li>`).join('')}
+        </ul>
+      </div>
+
+      <!-- Section 3 -->
+      <div class="section">
+        <div class="section-title">Your Match Score</div>
+        <div class="match-score-row">
+          <div>
+            <div class="score-num">${d.matchScore.overall}%</div>
+            <div class="score-label">overall match</div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
+        </div>
+        <table class="skills-table">
+          <thead><tr><th>Skill</th><th>Have it?</th><th>Strength</th></tr></thead>
+          <tbody>
+            ${d.matchScore.skills.map(s => `
+              <tr>
+                <td>${esc(s.skill)}</td>
+                <td>${s.have ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+                <td>${esc(s.strength)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:12px">
+          <ul class="flag-list">
+            ${d.matchScore.greenFlags.map(g => `<li class="green">✅ ${esc(g)}</li>`).join('')}
+            ${d.matchScore.gaps.map(g => `<li class="red">⚠️ ${esc(g)}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <!-- Section 4 -->
+      <div class="section">
+        <div class="section-title">Action Plan</div>
+        <ol class="action-list">
+          ${d.actionPlan.beforeApplying.map((a, i) => `<li><span class="action-num">${i+1}</span>${esc(a)}</li>`).join('')}
+        </ol>
+        <div style="margin:12px 0 6px"><label>Resume Keywords</label></div>
+        <div class="keyword-cloud">
+          ${d.actionPlan.resumeKeywords.map(k => `<span>${esc(k)}</span>`).join('')}
+        </div>
+        <div style="margin:12px 0 6px"><label>Interview Topics to Prep</label></div>
+        <ul class="flag-list">
+          ${d.actionPlan.interviewTopics.map(t => `<li class="amber">📚 ${esc(t)}</li>`).join('')}
+        </ul>
+        <div style="margin:12px 0 6px"><label>Should I Apply?</label></div>
+        <div class="verdict-box">
+          <div class="verdict-emoji">${verdictEmoji[d.actionPlan.shouldApply.verdict] || '🤔'}</div>
+          <div class="verdict-text">
+            <h4>${esc(d.actionPlan.shouldApply.verdict)}</h4>
+            <p>${esc(d.actionPlan.shouldApply.reason)}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5 -->
+      <div class="section">
+        <div class="section-title">Red Flags</div>
+        ${d.redFlags.length === 0
+          ? '<p style="font-size:0.87rem;color:var(--text-muted)">✅ No red flags detected.</p>'
+          : `<ul class="flag-list">${d.redFlags.map(f => `<li class="red">🚩 ${esc(f)}</li>`).join('')}</ul>`}
+      </div>
+    `;
+
+    if (!container) {
+      el.classList.remove('hidden');
+      setTimeout(() => {
+        const fill = document.getElementById('pfill');
+        if (fill) fill.style.width = d.matchScore.overall + '%';
+      }, 50);
+    }
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ─── History ────────────────────────────────────────────────
+  function saveToHistory(entry) {
+    let history = JSON.parse(localStorage.getItem('jd_history') || '[]');
+    history.unshift(entry);
+    history = history.slice(0, 3);
+    localStorage.setItem('jd_history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const history = JSON.parse(localStorage.getItem('jd_history') || '[]');
+    const sec = document.getElementById('historySection');
+    if (history.length === 0) { sec.innerHTML = ''; return; }
+    sec.innerHTML = `
+      <div class="history-title">Recent Analyses</div>
+      <div class="history-list">
+        ${history.map((h, i) => `
+          <div class="history-item" onclick="loadHistory(${i})">
+            <div class="history-item-left">
+              <span class="history-item-role">${esc(h.data.atAGlance.roleType)} · ${h.data.matchScore.overall}% match</span>
+              <span class="history-item-time">${new Date(h.ts).toLocaleString()}</span>
+            </div>
+            <span style="color:var(--text-muted)">→</span>
+          </div>`).join('')}
+      </div>`;
+  }
+
+  function loadHistory(i) {
+    const history = JSON.parse(localStorage.getItem('jd_history') || '[]');
+    const h = history[i];
+    if (!h) return;
+    document.getElementById('jdInput').value = h.jd;
+    document.getElementById('bgInput').value = h.bg;
+    document.getElementById('yearSelect').value = h.year;
+    lastAnalysis = h;
+    document.getElementById('placeholder').classList.add('hidden');
+    renderResults(h.data);
+    document.getElementById('resultsContent').classList.remove('hidden');
+    document.getElementById('downloadBtn').style.display = 'inline-flex';
+    setTimeout(() => {
+      const fill = document.getElementById('pfill');
+      if (fill) fill.style.width = h.data.matchScore.overall + '%';
+    }, 50);
+  }
+
+  // ─── Download ───────────────────────────────────────────────
+  function downloadAnalysis() {
+    if (!lastAnalysis) return;
+    const d = lastAnalysis.data;
+    const lines = [
+      `INTERNSHIP JD ANALYSIS`,
+      `Generated: ${new Date(lastAnalysis.ts).toLocaleString()}`,
+      `Year: ${lastAnalysis.year}`,
+      ``,
+      `AT A GLANCE`,
+      `Role: ${d.atAGlance.roleType}`,
+      `Company Vibe: ${d.atAGlance.companyVibe}`,
+      `Difficulty: ${d.atAGlance.difficulty}`,
+      `GPA Expectation: ${d.atAGlance.gpaExpectation}`,
+      ``,
+      `REQUIREMENTS`,
+      `Must-Haves:`,
+      ...d.requirements.mustHaves.map(r => `  • ${r}`),
+      `Nice-to-Haves:`,
+      ...d.requirements.niceToHaves.map(r => `  • ${r}`),
+      `Hidden Expectations:`,
+      ...d.requirements.hiddenExpectations.map(r => `  • ${r}`),
+      ``,
+      `MATCH SCORE: ${d.matchScore.overall}%`,
+      `Skills:`,
+      ...d.matchScore.skills.map(s => `  ${s.have ? '✓' : '✗'} ${s.skill} — ${s.strength}`),
+      `Green Flags:`,
+      ...d.matchScore.greenFlags.map(g => `  ✅ ${g}`),
+      `Gaps:`,
+      ...d.matchScore.gaps.map(g => `  ⚠️ ${g}`),
+      ``,
+      `ACTION PLAN`,
+      `Before Applying:`,
+      ...d.actionPlan.beforeApplying.map((a, i) => `  ${i+1}. ${a}`),
+      `Resume Keywords: ${d.actionPlan.resumeKeywords.join(', ')}`,
+      `Interview Topics:`,
+      ...d.actionPlan.interviewTopics.map(t => `  📚 ${t}`),
+      `Should I Apply? ${d.actionPlan.shouldApply.verdict}`,
+      `  ${d.actionPlan.shouldApply.reason}`,
+      ``,
+      `RED FLAGS`,
+      ...(d.redFlags.length === 0 ? ['  None detected.'] : d.redFlags.map(f => `  🚩 ${f}`)),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jd-analysis-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─── Compare ────────────────────────────────────────────────
+  function openCompareModal() {
+    document.getElementById('compareModal').classList.remove('hidden');
+  }
+  function closeCompareModal() {
+    document.getElementById('compareModal').classList.add('hidden');
+  }
+
+  async function runCompare() {
+    const jd1 = document.getElementById('jdInput').value.trim();
+    const jd2 = document.getElementById('jd2Input').value.trim();
+    const bg = document.getElementById('bgInput').value.trim();
+    const year = document.getElementById('yearSelect').value;
+
+    if (!jd1) { alert('Please enter your first JD in the left panel.'); return; }
+    if (!jd2) { alert('Please paste the second JD.'); return; }
+
+    const btn = document.querySelector('#compareModal .btn-primary');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Comparing…';
+
+    try {
+      const [r1, r2] = await Promise.all([
+        callGemini(buildPrompt(jd1, bg, year)),
+        callGemini(buildPrompt(jd2, bg, year))
+      ]);
+      const d1 = JSON.parse(r1.replace(/```json|```/g, '').trim());
+      const d2 = JSON.parse(r2.replace(/```json|```/g, '').trim());
+      closeCompareModal();
+      renderCompare(d1, d2);
+    } catch(e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Compare Both';
+    }
+  }
+
+  function renderCompare(d1, d2) {
+    const rc = document.getElementById('resultsContent');
+    rc.classList.remove('hidden');
+    document.getElementById('placeholder').classList.add('hidden');
+
+    const col1 = document.createElement('div');
+    const col2 = document.createElement('div');
+    renderResults(d1, col1);
+    renderResults(d2, col2);
+
+    rc.innerHTML = `
+      <div class="section-title" style="margin-bottom:12px">⚖️ Side-by-Side Comparison</div>
+      <div class="compare-grid">
+        <div class="compare-col">
+          <h4>JD #1 — ${esc(d1.atAGlance.roleType)} <span class="badge badge-coral">${d1.matchScore.overall}%</span></h4>
+          <div id="comp1"></div>
+        </div>
+        <div class="compare-col">
+          <h4>JD #2 — ${esc(d2.atAGlance.roleType)} <span class="badge badge-coral">${d2.matchScore.overall}%</span></h4>
+          <div id="comp2"></div>
+        </div>
+      </div>`;
+
+    document.getElementById('comp1').appendChild(col1);
+    document.getElementById('comp2').appendChild(col2);
+  }
+
+  // ─── Init ───────────────────────────────────────────────────
+  renderHistory();
+</script>
+</body>
+</html>
